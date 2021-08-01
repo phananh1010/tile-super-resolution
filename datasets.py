@@ -77,6 +77,10 @@ class InpaintDataset(t.utils.data.Dataset):
     def get_frameidx_from_framename(self, framename):
         return int(framename.replace('.jpg', ''))
     
+    def get_tilepos_from_vidname(self, vidname):
+        orividname, _, _, posw, posh = vidname.split('_')
+        return int(posw), int(posh)
+    
     def select_frame(self, vid_name, framename_full_list):
         #TODO: choose some random frame from frame_full_list, or choose consecutive, depending on the chance
         framename_list = []
@@ -101,7 +105,7 @@ class InpaintDataset(t.utils.data.Dataset):
             framename_list = [framename_full_list[idx] for idx in frame_idx_list]
         frameidx_list = [self.get_frameidx_from_framename(item) for item in framename_list]    
         
-
+        tilepos = self.get_tilepos_from_vidname(vid_name)
         
         #get frame in lr and hr from framename_list
         for framename in framename_list:
@@ -117,7 +121,7 @@ class InpaintDataset(t.utils.data.Dataset):
             if self.frame_hr_transform != None:
                 frame_hr_list.append(self.frame_hr_transform(img))
         
-        return frame_lr_list, frame_hr_list, framename_list, t.from_numpy(np.array(frameidx_list))
+        return frame_lr_list, frame_hr_list, framename_list, t.from_numpy(np.array(frameidx_list)), tilepos
     
         
     
@@ -127,7 +131,7 @@ class InpaintDataset(t.utils.data.Dataset):
         frame_num = self.video_dict[vid_name]
         framename_full_list = self.get_framename_list(vid_name)
         
-        frame_lr_list, frame_hr_list, framename_list, frameidx_list = self.select_frame(vid_name, framename_full_list)
+        frame_lr_list, frame_hr_list, framename_list, frameidx_list, tilepos = self.select_frame(vid_name, framename_full_list)
 
         
         if self.vid_transform != None:
@@ -136,4 +140,4 @@ class InpaintDataset(t.utils.data.Dataset):
 #             refframe_list   = self.vid_transform(refframe_list)
 
         
-        return (frame_lr_list, frame_hr_list), frameidx_list
+        return (frame_lr_list, frame_hr_list), frameidx_list, tilepos
