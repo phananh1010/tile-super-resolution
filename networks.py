@@ -85,14 +85,17 @@ class SuperRes(BaseNet): #include transformer
         self.encoders = t.nn.Sequential(*encoder_blocks)       
         
         self.decoders = t.nn.Sequential(
-            t.nn.ConvTranspose2d(self.hidden, 3,   kernel_size=2, stride=2)
+            t.nn.Conv2d(self.hidden, self.hidden, kernel_size=3, stride=1, padding=1),
+            t.nn.LeakyReLU(0.2, inplace=True),
+            t.nn.Conv2d(self.hidden, self.hidden, kernel_size=3, stride=1, padding=1),
+            t.nn.ConvTranspose2d(self.hidden, 3,   kernel_size=2, stride=2),
         )        
         
         if init_weights:
             self.init_weights()               
             
     def forward(self, x):
-        x = t.nn.functional.interpolate(x, scale_factor=4)
+        x = t.nn.functional.interpolate(x, scale_factor=4, mode='bicubic')
         enc_feat = self.encoder0(x)
         enc_feat = enc_feat + self.encoders(enc_feat)
         output = self.decoders(enc_feat)
