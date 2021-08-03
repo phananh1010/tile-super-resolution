@@ -209,7 +209,7 @@ class Salting(object):
     
     def __call__(self, x):
         #todo: set random position values (0, 0, 0) and (255, 255, 255)
-        if np.random.rand() > chance:
+        if np.random.rand() > self.chance:
             return x
         
         for _ in range(self.nl):
