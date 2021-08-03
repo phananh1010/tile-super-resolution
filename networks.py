@@ -64,12 +64,13 @@ class BaseNet(t.nn.Module):
     
     def infer(self, feat, masks):
         raise         
-    
 
-class SuperRes(BaseNet): #include transformer
-    def __init__(self, hidden, stack_num, init_weights=True):
-        super(SuperRes, self).__init__()
-        
+
+
+class SuperResV0(BaseNet): #try to reconstruct the network used by the author of the super-res paper
+    def __init__(self, hidden, stack_num, scale_factor, init_weights=True):
+        super(SuperResV0, self).__init__()
+        self.scale_factor = scale_factor
         self.hidden = hidden
         self.stack_num = stack_num
         
@@ -85,9 +86,9 @@ class SuperRes(BaseNet): #include transformer
         self.encoders = t.nn.Sequential(*encoder_blocks)       
         
         self.decoders = t.nn.Sequential(
-            t.nn.Conv2d(self.hidden, self.hidden, kernel_size=3, stride=1, padding=1),
+            t.nn.Conv2d(self.hidden, self.hidden, kernel_size=3, stride=1, padding=1, groups=self.hidden),
             t.nn.LeakyReLU(0.2, inplace=True),
-            t.nn.Conv2d(self.hidden, self.hidden, kernel_size=3, stride=1, padding=1),
+            t.nn.Conv2d(self.hidden, self.hidden, kernel_size=1),
             t.nn.ConvTranspose2d(self.hidden, 3,   kernel_size=2, stride=2),
         )        
         
@@ -95,12 +96,22 @@ class SuperRes(BaseNet): #include transformer
             self.init_weights()               
             
     def forward(self, x):
-        x = t.nn.functional.interpolate(x, scale_factor=4, mode='bicubic')
+        x = t.nn.functional.interpolate(x, scale_factor=self.scale_factor, mode='bicubic')
         enc_feat = self.encoder0(x)
         enc_feat = enc_feat + self.encoders(enc_feat)
         output = self.decoders(enc_feat)
-        #output = t.tanh(output)
+        output = t.tanh(output)
         return output
+    
+class SuperRes(SuperResV0):
+    def __init__(self, hidden, stack_num, scale_factor, init_weights=True):
+        super(SuperRes, self).__init__(hidden, stack_num, scale_factor, init_weights)
+        encoder_blocks = []
+        for _ in range(self.stack_num - 1):
+            encoder_blocks.append(FeedForwardDWSConv(channels_in=self.hidden, channels_out=self.hidden))
+        self.encoders = t.nn.Sequential(*encoder_blocks)  
+
+            
 ####################################
 class FeedForward(t.nn.Module):
     def __init__(self, channels_in, channels_out):
@@ -115,8 +126,23 @@ class FeedForward(t.nn.Module):
         x = x + self.conv(x)
         return x
     
-    
-
+class FeedForwardDWSConv(t.nn.Module):
+    def __init__(self, channels_in, channels_out):
+#         from https://discuss.pytorch.org/t/how-to-modify-a-conv2d-to-depthwise-separable-convolution/15843/6
+#         self.depthwise = nn.Conv2d(nin, nin, kernel_size=3, padding=1, groups=nin)
+#         self.pointwise = nn.Conv2d(nin, nout, kernel_size=1)        
+        super(FeedForwardDWSConv, self).__init__()
+        self.conv = t.nn.Sequential(
+            t.nn.Conv2d(channels_in, channels_out, kernel_size=3, stride=1, padding=1, groups=channels_in),
+            t.nn.LeakyReLU(0.2, inplace=True),
+            t.nn.BatchNorm2d(channels_out),
+            t.nn.Conv2d(channels_in, channels_out, kernel_size=1),
+            t.nn.LeakyReLU(0.2, inplace=True),
+            t.nn.BatchNorm2d(channels_out),            
+        )
+    def forward(self, x):
+        x = x + self.conv(x)
+        return x
 ######Discriminator code#############
 
         

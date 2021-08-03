@@ -185,6 +185,40 @@ class Resize(object):
     def __call__(self, x):
         x = t.nn.functional.interpolate(x, scale_factor=self.scale_factor, mode='bilinear', align_corners=True, recompute_scale_factor=True)
         return x
+    
+class Salting(object):
+    #TODO: randomly add 0 and max into the image
+    
+    def __init__(self, nl=5, nh=5, seed=42, chance=.5):
+        self.nl = nl
+        self.nh = nh
+        np.random.seed(seed)
+        self.chance = chance
+        
+    def rand_pos(self, w, h):
+        pw = int(np.random.rand() * w)
+        ph = int(np.random.rand() * h)
+        return pw, ph
+    
+    def rand_salt(self, img, val):
+        #TODO: random a position, and set the value val to the img
+        #img: PIL object
+        w, h = img.size
+        pw, ph = self.rand_pos(w, h)
+        img.putpixel((pw, ph), val)
+    
+    def __call__(self, x):
+        #todo: set random position values (0, 0, 0) and (255, 255, 255)
+        if np.random.rand() > chance:
+            return x
+        
+        for _ in range(self.nl):
+            self.rand_salt(x, (0, 0, 0))
+            
+        for _ in range(self.nh):
+            self.rand_salt(x, (255, 255, 255))
+        
+        return x
           
 
 class VidTensorConverter(object):
