@@ -1,0 +1,26 @@
+./create_all_tile_vidseg10.sh
+./create_all_tile_vidseg12.sh
+./create_all_tile_vidseg14.sh
+./create_all_tile_vidseg16.sh
+./create_all_tile_vidseg18.sh
+./create_all_tile_vidseg20.sh
+./create_all_tile_vidseg22.sh
+./create_all_tile_vidseg24.sh
+./create_all_tile_vidseg26.sh
+./create_all_tile_vidseg28.sh
+./create_all_tile_vidseg30.sh
+./create_all_tile_vidseg32.sh
+./create_all_tile_vidseg34.sh
+./create_all_tile_vidseg36.sh
+./create_all_tile_vidseg38.sh
+./create_all_tile_vidseg40.sh
+./create_all_tile_vidseg42.sh
+./create_all_tile_vidseg44.sh
+./create_all_tile_vidseg46.sh
+./create_all_tile_vidseg48.sh
+./create_all_tile_vidseg50.sh
+./create_all_tile_vidseg52.sh
+./create_all_tile_vidseg54.sh
+./create_all_tile_vidseg56.sh
+./create_all_tile_vidseg58.sh
+rm ./create_all_tile_vidseg*.sh
